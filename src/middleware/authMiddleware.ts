@@ -1,13 +1,10 @@
-import { Request, Response, NextFunction } from "express";
+import { RequestHandler } from "express";
 
-const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+const authMiddleware: RequestHandler = (req, res, next) => {
     const authorization = req.headers["authorization"];
 
     if (!authorization || authorization !== "fha5HpDXSXSjKU0QCbdXiz1a") {
-        res.status(401).json({
-            message: "No autorizado"
-        });
-        return;
+        return res.status(401).json({ message: "No autorizado" });
     }
 
     next();
