@@ -1,83 +1,34 @@
 import { Router, Request, Response } from "express";
-import users from "../data/users";
-import { User } from "../models/Users";
+import { userService } from "../services/user.service";
+import { UpdateUserDTO } from "../utils/user.types";
 
 const router = Router();
 
-// Obtener todos los usuarios
-router.get("/", (req: Request, res: Response) => {
-    if (users.length === 0) {
-        return res.status(404).json({ message: "No hay usuarios disponibles" });
-    }
-
-    res.json(users);
+// GET /users — Obtiene todos los usuarios (sin passwords)
+router.get("/", async (_req: Request, res: Response) => {
+    const result = await userService.getAll();
+    res.status(result.status).json({ message: result.message, data: result.data });
 });
 
-// Obtener un usuario por ID
-router.get("/:id", (req: Request, res: Response) => {
-    const id = Number(req.params.id);
-
-    const user = users.find((u: User) => u.id === id);
-
-    if (!user) {
-        return res.status(404).json({ message: "Usuario no encontrado" });
-    }
-
-    res.json(user);
+// GET /users/:id — Obtiene un usuario por ID (sin password)
+router.get("/:id", async (req: Request, res: Response) => {
+    const id = Number(req.params["id"]);
+    const result = await userService.getById(id);
+    res.status(result.status).json({ message: result.message, data: result.data });
 });
 
-// Crear un nuevo usuario
-router.post("/", (req: Request, res: Response) => {
-
-    const newUser: User = {
-        id: users.length + 1,
-        name: req.body.name,
-        email: req.body.email,
-        password: req.body.password,
-        birthday: req.body.birthday
-    };
-
-    users.push(newUser);
-
-    res.status(201).json(newUser);
+// PUT /users/:id — DTO: UpdateUserDTO (todos los campos opcionales)
+router.put("/:id", async (req: Request<{ id: string }, {}, UpdateUserDTO>, res: Response) => {
+    const id = Number(req.params["id"]);
+    const result = await userService.update(id, req.body);
+    res.status(result.status).json({ message: result.message, data: result.data });
 });
 
-// Actualizar un usuario
-router.put("/:id", (req: Request, res: Response) => {
-
-    const id = Number(req.params.id);
-
-    const user = users.find((u: User) => u.id === id);
-
-    if (!user) {
-        return res.status(404).json({ message: "Usuario no encontrado" });
-    }
-
-    user.name = req.body.name || user.name;
-    user.email = req.body.email || user.email;
-    user.password = req.body.password || user.password;
-    user.birthday = req.body.birthday || user.birthday;
-
-    res.json(user);
-});
-
-// Eliminar un usuario
-router.delete("/:id", (req: Request, res: Response) => {
-
-    const id = Number(req.params.id);
-
-    const index = users.findIndex((u: User) => u.id === id);
-
-    if (index === -1) {
-        return res.status(404).json({ message: "Usuario no encontrado" });
-    }
-
-    const deletedUser = users.splice(index, 1);
-
-    res.json({
-        message: "Usuario eliminado",
-        user: deletedUser
-    });
+// DELETE /users/:id — Elimina un usuario
+router.delete("/:id", async (req: Request, res: Response) => {
+    const id = Number(req.params["id"]);
+    const result = await userService.remove(id);
+    res.status(result.status).json({ message: result.message, data: result.data });
 });
 
 export default router;
